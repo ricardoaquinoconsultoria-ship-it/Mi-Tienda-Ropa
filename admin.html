@@ -74,6 +74,11 @@
             color: white;
         }
 
+        .btn-warning {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            color: white;
+        }
+
         .btn-config {
             background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
             color: white;
@@ -184,10 +189,21 @@
             margin-top: 12px;
             display: flex;
             gap: 6px;
+            flex-wrap: wrap;
         }
 
         .btn-danger {
             background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8em;
+        }
+
+        .btn-edit {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
             color: white;
             border: none;
             padding: 6px 12px;
@@ -328,6 +344,22 @@
             font-size: 0.9em;
         }
 
+        .edit-form {
+            display: none;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 15px;
+            border: 2px solid #667eea;
+        }
+
+        .current-image {
+            max-width: 150px;
+            max-height: 150px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+
         @media (max-width: 768px) {
             .admin-content {
                 padding: 1rem;
@@ -347,6 +379,10 @@
                 right: 0;
                 justify-content: center;
                 margin-top: 10px;
+            }
+            
+            .product-actions {
+                flex-direction: column;
             }
         }
     </style>
@@ -491,6 +527,7 @@
         let imagenFile = null;
         let tiendaId = null;
         let productos = [];
+        let productoEditando = null;
 
         // Obtener tiendaId
         function obtenerTiendaId() {
@@ -510,6 +547,12 @@
                 cargarProductos();
             } else if (seccion === 'dashboard') {
                 actualizarDashboard();
+            } else if (seccion === 'agregar') {
+                // Limpiar formulario al cambiar a agregar
+                document.getElementById('formAgregarProducto').reset();
+                document.getElementById('imagePreview').style.display = 'none';
+                imagenFile = null;
+                productoEditando = null;
             }
         }
 
@@ -564,21 +607,25 @@
         document.getElementById('formAgregarProducto').addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            if (!imagenFile) {
+            if (!imagenFile && !productoEditando) {
                 mostrarAlerta('Por favor selecciona una imagen del producto', 'error', 'agregar');
                 return;
             }
 
             const boton = e.target.querySelector('button[type="submit"]');
             const textoOriginal = boton.textContent;
-            boton.textContent = '⏳ Subiendo...';
+            boton.textContent = productoEditando ? '⏳ Actualizando...' : '⏳ Subiendo...';
             boton.disabled = true;
 
             try {
-                // Subir imagen
-                const imagenUrl = await subirImagen(imagenFile);
+                let imagenUrl = productoEditando ? productoEditando.imagen_url : null;
+                
+                // Subir nueva imagen si se seleccionó una
+                if (imagenFile) {
+                    imagenUrl = await subirImagen(imagenFile);
+                }
 
-                // Crear producto con 3 precios
+                // Crear/Actualizar producto con 3 precios
                 const producto = {
                     nombre: document.getElementById('nombre').value,
                     descripcion: document.getElementById('descripcion').value,
@@ -586,28 +633,53 @@
                     precio_clave2: parseFloat(document.getElementById('precio_clave2').value),
                     precio_clave3: parseFloat(document.getElementById('precio_clave3').value),
                     categoria: document.getElementById('categoria').value,
-                    imagen_url: imagenUrl,
                     tienda_id: tiendaId,
                     activo: true,
                     fecha_creacion: new Date().toISOString()
                 };
 
-                // Guardar en Supabase
-                const { error } = await supabase
-                    .from('productos')
-                    .insert([producto]);
+                // Agregar imagen solo si es nueva
+                if (imagenUrl) {
+                    producto.imagen_url = imagenUrl;
+                }
+
+                let error;
+                if (productoEditando) {
+                    // Actualizar producto existente
+                    const { error: updateError } = await supabase
+                        .from('productos')
+                        .update(producto)
+                        .eq('id', productoEditando.id);
+                    error = updateError;
+                } else {
+                    // Crear nuevo producto
+                    const { error: insertError } = await supabase
+                        .from('productos')
+                        .insert([producto]);
+                    error = insertError;
+                }
 
                 if (error) throw error;
 
-                mostrarAlerta('✅ Producto agregado correctamente. Ya está visible en la tienda.', 'success', 'agregar');
+                mostrarAlerta(
+                    productoEditando ? 
+                    '✅ Producto actualizado correctamente' : 
+                    '✅ Producto agregado correctamente. Ya está visible en la tienda.', 
+                    'success', 
+                    'agregar'
+                );
+                
                 this.reset();
                 document.getElementById('imagePreview').style.display = 'none';
                 imagenFile = null;
+                productoEditando = null;
 
+                // Actualizar lista de productos
+                cargarProductos();
                 actualizarDashboard();
 
             } catch (error) {
-                mostrarAlerta('❌ Error al agregar producto: ' + error.message, 'error', 'agregar');
+                mostrarAlerta('❌ Error al ' + (productoEditando ? 'actualizar' : 'agregar') + ' producto: ' + error.message, 'error', 'agregar');
             } finally {
                 boton.textContent = textoOriginal;
                 boton.disabled = false;
@@ -657,7 +729,7 @@
                 const fechaFormateada = fecha.toLocaleDateString('es-ES');
                 
                 return `
-                    <div class="product-card">
+                    <div class="product-card" id="producto-${producto.id}">
                         <img src="${producto.imagen_url}" alt="${producto.nombre}" class="product-image"
                              onerror="this.src='https://via.placeholder.com/300x200/667eea/ffffff?text=Imagen+No+Disponible'">
                         <h3 style="margin-bottom: 8px; color: #2c3e50; font-size: 1em;">${producto.nombre}</h3>
@@ -678,7 +750,11 @@
                         <p style="margin-bottom: 5px; font-size: 0.9em;"><strong>Categoría:</strong> ${producto.categoria}</p>
                         <p style="margin-bottom: 10px; color: #666; font-size: 0.8em;">${producto.descripcion}</p>
                         <p style="color: #95a5a6; font-size: 0.7em;">Agregado: ${fechaFormateada}</p>
+                        
                         <div class="product-actions">
+                            <button class="btn-edit" onclick="editarProducto('${producto.id}')">
+                                ✏️ Editar
+                            </button>
                             <button class="btn-danger" onclick="eliminarProducto('${producto.id}', '${producto.nombre}')">
                                 🗑️ Eliminar
                             </button>
@@ -686,6 +762,36 @@
                     </div>
                 `;
             }).join('');
+        }
+
+        // Editar producto
+        function editarProducto(id) {
+            const producto = productos.find(p => p.id === id);
+            if (!producto) return;
+
+            productoEditando = producto;
+
+            // Llenar formulario con datos del producto
+            document.getElementById('nombre').value = producto.nombre;
+            document.getElementById('descripcion').value = producto.descripcion;
+            document.getElementById('categoria').value = producto.categoria;
+            document.getElementById('precio_clave1').value = producto.precio_clave1;
+            document.getElementById('precio_clave2').value = producto.precio_clave2;
+            document.getElementById('precio_clave3').value = producto.precio_clave3;
+
+            // Mostrar imagen actual
+            const preview = document.getElementById('imagePreview');
+            preview.src = producto.imagen_url;
+            preview.style.display = 'block';
+
+            // Cambiar texto del botón
+            document.querySelector('#formAgregarProducto button[type="submit"]').textContent = '✅ Actualizar Producto';
+
+            // Cambiar a sección de agregar/editar
+            mostrarSeccion('agregar');
+
+            // Scroll al formulario
+            document.getElementById('agregar').scrollIntoView({ behavior: 'smooth' });
         }
 
         // Eliminar producto
