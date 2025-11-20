@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tienda de Ropa - Acceso Exclusivo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-container {
+            background: white;
+            padding: 40px 30px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            text-align: center;
+            max-width: 450px;
+            width: 100%;
+        }
+
+        .login-title {
+            font-size: 2em;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+
+        .login-subtitle {
+            color: #7f8c8d;
+            margin-bottom: 30px;
+            font-size: 1em;
+        }
+
+        .login-input {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e1e8ed;
+            border-radius: 12px;
+            font-size: 1.1em;
+            margin-bottom: 20px;
+            text-align: center;
+            transition: border-color 0.3s ease;
+        }
+
+        .login-input:focus {
+            border-color: #667eea;
+            outline: none;
+        }
+
+        .login-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .login-error {
+            color: #e74c3c;
+            margin-top: 15px;
+            font-size: 0.9em;
+            display: none;
+        }
+
+        .tienda-content {
+            display: none;
+            width: 100%;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 2rem 1rem;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            margin-bottom: 0.5rem;
+            font-size: 2em;
+            font-weight: 300;
+        }
+        
+        .header p {
+            font-size: 1em;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .welcome-message {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .welcome-message h2 {
+            font-size: 1.6em;
+            margin-bottom: 10px;
+            color: #2c3e50;
+            font-weight: 300;
+        }
+
+        .filters {
+            text-align: center;
+            margin: 20px 0;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .filter-btn {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+            padding: 10px 15px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            font-size: 0.9em;
+        }
+
+        .filter-btn:hover, .filter-btn.active {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .product-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+        }
+
+        .product-image {
+            width: 100%;
+            height: 250px;
+            object-fit: contain;
+            background: #f8f9fa;
+            border-radius: 8px 8px 0 0;
+            padding: 10px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .product-info {
+            padding: 15px;
+        }
+
+        .product-title {
+            font-size: 1.1em;
+            margin-bottom: 8px;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .product-price {
+            font-weight: bold;
+            color: #e74c3c;
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+
+        .product-description {
+            color: #7f8c8d;
+            margin-bottom: 15px;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+
+        .add-to-cart {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 0.95em;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .add-to-cart:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(39, 174, 96, 0.3);
+        }
+
+        .logout-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9em;
+            z-index: 1000;
+        }
+
+        .admin-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9em;
+            z-index: 1000;
+            text-decoration: none;
+            display: none;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 2s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .login-container {
+                padding: 30px 20px;
+                margin: 10px;
+            }
+            
+            .products-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .product-card {
+                margin: 0 10px;
+            }
+            
+            .login-btn, .add-to-cart {
+                padding: 18px;
+            }
+            
+            .filters {
+                gap: 8px;
+            }
+            
+            .filter-btn {
+                padding: 8px 12px;
+                font-size: 0.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Principal -->
+    <div class="login-container" id="loginContainer">
+        <h1 class="login-title">🛍️ Tienda de Ropa</h1>
+        <p class="login-subtitle">Acceso exclusivo para clientes</p>
+        
+        <input type="password" class="login-input" id="passwordInput" placeholder="Ingresa tu clave de acceso" autocomplete="off">
+        <button class="login-btn" onclick="verificarPassword()">Acceder a la Tienda</button>
+        
+        <div class="login-error" id="loginError">
+            ❌ Clave incorrecta. Intenta nuevamente.
+        </div>
+    </div>
+
+    <!-- Tienda -->
+    <div class="tienda-content" id="tiendaContent">
+        <div class="header">
+            <h1>🛍️ Tienda de Ropa</h1>
+            <p>Colección exclusiva para clientes</p>
+        </div>
+
+        <button class="logout-btn" onclick="cerrarSesion()">👤 Cerrar Sesión</button>
+        <a href="admin.html" class="admin-btn" id="adminBtn">⚙️ Panel Admin</a>
+
+        <div class="container">
+            <div class="welcome-message">
+                <h2 id="welcomeTitle">Nuestra Colección</h2>
+                <p id="welcomeSubtitle">Productos exclusivos para nuestros clientes</p>
+            </div>
+
+            <div class="filters">
+                <button class="filter-btn active" onclick="filtrarProductos('todos')">Todos</button>
+                <button class="filter-btn" onclick="filtrarProductos('vestidos')">Vestidos</button>
+                <button class="filter-btn" onclick="filtrarProductos('blusas')">Blusas</button>
+                <button class="filter-btn" onclick="filtrarProductos('pantalones')">Pantalones</button>
+                <button class="filter-btn" onclick="filtrarProductos('accesorios')">Accesorios</button>
+            </div>
+
+            <div id="productsContainer" class="products-grid">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <p>Cargando productos...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // CONFIGURACIÓN SUPABASE - TUS DATOS REALES
+        const SUPABASE_URL = 'https://plhifofzgwsgoqmlzshd.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsaGlmb2Z6Z3dzZ29xbWx6c2hkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM2NTQ0NTEsImV4cCI6MjA3OTIzMDQ1MX0.DJoedRtvHqDMmLHSwnB8Vyo4-dLnW22hn0HF5EVH0hU';
+        
+        // Inicializar Supabase
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // Variables globales
+        let tiendaId = null;
+        let productos = [];
+        let usuarioActual = null;
+
+        // CONTRASEÑAS VÁLIDAS
+        const PASSWORDS_VALIDOS = {
+            'admin123': { tipo: 'admin', nombre: 'Administrador', clave: 'admin' },
+            '1234': { tipo: 'cliente', nombre: 'Cliente Grupo 1', clave: 'clave1' },
+            '1234q': { tipo: 'cliente', nombre: 'Cliente Grupo 2', clave: 'clave2' },
+            '1234a': { tipo: 'cliente', nombre: 'Cliente Grupo 3', clave: 'clave3' }
+        };
+
+        // Obtener tiendaId de URL o localStorage
+        function obtenerTiendaId() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('tienda') || localStorage.getItem('tiendaId') || 'tienda_demo';
+        }
+
+        // Verificar contraseña
+        function verificarPassword() {
+            const password = document.getElementById('passwordInput').value;
+            const errorElement = document.getElementById('loginError');
+            
+            if (PASSWORDS_VALIDOS[password]) {
+                usuarioActual = PASSWORDS_VALIDOS[password];
+                localStorage.setItem('usuarioActual', JSON.stringify(usuarioActual));
+                
+                // Mostrar botón admin si es administrador
+                if (usuarioActual.tipo === 'admin') {
+                    document.getElementById('adminBtn').style.display = 'block';
+                }
+                
+                iniciarSesion();
+                errorElement.style.display = 'none';
+            } else {
+                errorElement.style.display = 'block';
+                document.getElementById('passwordInput').value = '';
+                document.getElementById('passwordInput').focus();
+            }
+        }
+
+        // Iniciar sesión
+        function iniciarSesion() {
+            document.getElementById('loginContainer').style.display = 'none';
+            document.getElementById('tiendaContent').style.display = 'block';
+            
+            // Actualizar mensaje de bienvenida
+            document.getElementById('welcomeTitle').textContent = `Bienvenido, ${usuarioActual.nombre}`;
+            document.getElementById('welcomeSubtitle').textContent = 'Descubre nuestros productos exclusivos';
+            
+            cargarProductos();
+        }
+
+        // Cerrar sesión
+        function cerrarSesion() {
+            localStorage.removeItem('usuarioActual');
+            location.reload();
+        }
+
+        // Permitir Enter para login
+        document.getElementById('passwordInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                verificarPassword();
+            }
+        });
+
+        // Cargar productos desde Supabase
+        async function cargarProductos() {
+            try {
+                tiendaId = obtenerTiendaId();
+                const { data, error } = await supabase
+                    .from('productos')
+                    .select('*')
+                    .eq('tienda_id', tiendaId)
+                    .eq('activo', true)
+                    .order('fecha_creacion', { ascending: false });
+                
+                if (error) throw error;
+
+                productos = data || [];
+                mostrarProductos();
+            } catch (error) {
+                console.error('Error cargando productos:', error);
+                document.getElementById('productsContainer').innerHTML = `
+                    <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #666;">
+                        <p>Error cargando productos. Recarga la página.</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Obtener precio según la clave del usuario
+        function obtenerPrecioUsuario(producto) {
+            if (usuarioActual.tipo === 'admin') {
+                // Admin ve todos los precios
+                return `
+                    <div class="product-price">
+                        <div>Clave 1234: $${producto.precio_clave1}</div>
+                        <div>Clave 1234q: $${producto.precio_clave2}</div>
+                        <div>Clave 1234a: $${producto.precio_clave3}</div>
+                    </div>
+                `;
+            } else {
+                // Cliente ve solo SU precio
+                let precio = producto.precio_clave1; // Por defecto clave1
+                
+                if (usuarioActual.clave === 'clave2') {
+                    precio = producto.precio_clave2;
+                } else if (usuarioActual.clave === 'clave3') {
+                    precio = producto.precio_clave3;
+                }
+                
+                return `<div class="product-price">$${precio}</div>`;
+            }
+        }
+
+        // Mostrar productos en la página
+        function mostrarProductos(categoria = 'todos') {
+            const container = document.getElementById('productsContainer');
+            
+            const productosFiltrados = categoria === 'todos' 
+                ? productos 
+                : productos.filter(p => p.categoria === categoria);
+
+            if (productosFiltrados.length === 0) {
+                container.innerHTML = `
+                    <div style="grid-column: 1/-1; text-align: center; padding: 60px 20px; color: #666;">
+                        <div style="font-size: 4rem; margin-bottom: 20px;">🛍️</div>
+                        <h3 style="margin-bottom: 10px; color: #2c3e50;">No hay productos disponibles</h3>
+                        <p>Próximamente agregaremos más productos</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = productosFiltrados.map(producto => {
+                const esNuevo = new Date(producto.fecha_creacion) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+                
+                return `
+                    <div class="product-card">
+                        ${esNuevo ? '<div style="position: absolute; top: 15px; right: 15px; background: #e74c3c; color: white; padding: 5px 10px; border-radius: 12px; font-size: 0.7em; font-weight: 600;">NUEVO</div>' : ''}
+                        <img src="${producto.imagen_url}" alt="${producto.nombre}" class="product-image"
+                             onerror="this.src='https://via.placeholder.com/300x250/667eea/ffffff?text=Imagen+No+Disponible'">
+                        <div class="product-info">
+                            <h3 class="product-title">${producto.nombre}</h3>
+                            ${obtenerPrecioUsuario(producto)}
+                            <p class="product-description">${producto.descripcion}</p>
+                            <button class="add-to-cart" onclick="agregarAlCarrito('${producto.id}')">
+                                🛒 Agregar al Carrito
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Actualizar botones activos
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.textContent.toLowerCase().includes(categoria) || 
+                   (categoria === 'todos' && btn.textContent === 'Todos')) {
+                    btn.classList.add('active');
+                }
+            });
+        }
+
+        // Filtrar productos
+        function filtrarProductos(categoria) {
+            mostrarProductos(categoria);
+        }
+
+        // Agregar al carrito
+        function agregarAlCarrito(productoId) {
+            const producto = productos.find(p => p.id === productoId);
+            if (producto) {
+                let precio = producto.precio_clave1;
+                
+                if (usuarioActual.clave === 'clave2') {
+                    precio = producto.precio_clave2;
+                } else if (usuarioActual.clave === 'clave3') {
+                    precio = producto.precio_clave3;
+                }
+                    
+                alert(`✅ "${producto.nombre}" agregado al carrito\nPrecio: $${precio}`);
+            }
+        }
+
+        // Verificar si ya hay sesión activa al cargar la página
+        function verificarSesionActiva() {
+            const usuarioGuardado = localStorage.getItem('usuarioActual');
+            if (usuarioGuardado) {
+                usuarioActual = JSON.parse(usuarioGuardado);
+                
+                if (usuarioActual.tipo === 'admin') {
+                    document.getElementById('adminBtn').style.display = 'block';
+                }
+                
+                iniciarSesion();
+            }
+        }
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', function() {
+            verificarSesionActiva();
+        });
+    </script>
+</body>
+</html>
