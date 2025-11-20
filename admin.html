@@ -344,22 +344,6 @@
             font-size: 0.9em;
         }
 
-        .edit-form {
-            display: none;
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 10px;
-            margin-top: 15px;
-            border: 2px solid #667eea;
-        }
-
-        .current-image {
-            max-width: 150px;
-            max-height: 150px;
-            border-radius: 6px;
-            margin: 10px 0;
-        }
-
         @media (max-width: 768px) {
             .admin-content {
                 padding: 1rem;
@@ -450,7 +434,7 @@
             
             <!-- Sección Agregar Producto -->
             <div id="agregar" class="section">
-                <h2>➕ Agregar Nuevo Producto</h2>
+                <h2 id="tituloAgregar">➕ Agregar Nuevo Producto</h2>
                 <div id="alertAgregar" class="alert"></div>
                 
                 <form id="formAgregarProducto">
@@ -507,8 +491,11 @@
                         <img id="imagePreview" class="image-preview" alt="Vista previa">
                     </div>
                     
-                    <button type="submit" class="btn btn-primary" style="padding: 12px 25px; font-size: 1em;">
+                    <button type="submit" class="btn btn-primary" style="padding: 12px 25px; font-size: 1em;" id="btnSubmit">
                         ✅ Agregar Producto
+                    </button>
+                    <button type="button" class="btn btn-secondary" style="padding: 12px 25px; font-size: 1em; display: none;" id="btnCancelar" onclick="cancelarEdicion()">
+                        ❌ Cancelar Edición
                     </button>
                 </form>
             </div>
@@ -547,18 +534,31 @@
                 cargarProductos();
             } else if (seccion === 'dashboard') {
                 actualizarDashboard();
-            } else if (seccion === 'agregar') {
-                // Limpiar formulario al cambiar a agregar
-                document.getElementById('formAgregarProducto').reset();
-                document.getElementById('imagePreview').style.display = 'none';
-                imagenFile = null;
-                productoEditando = null;
+            } else if (seccion === 'agregar' && !productoEditando) {
+                // Limpiar formulario al cambiar a agregar (solo si no está editando)
+                resetFormulario();
             }
         }
 
         // Mostrar ID de tienda
         function mostrarTiendaId() {
             document.getElementById('tiendaIdDisplay').textContent = tiendaId;
+        }
+
+        // Resetear formulario
+        function resetFormulario() {
+            document.getElementById('formAgregarProducto').reset();
+            document.getElementById('imagePreview').style.display = 'none';
+            imagenFile = null;
+            productoEditando = null;
+            document.getElementById('tituloAgregar').textContent = '➕ Agregar Nuevo Producto';
+            document.getElementById('btnSubmit').textContent = '✅ Agregar Producto';
+            document.getElementById('btnCancelar').style.display = 'none';
+        }
+
+        // Cancelar edición
+        function cancelarEdicion() {
+            resetFormulario();
         }
 
         // Previsualizar imagen
@@ -603,7 +603,7 @@
             }
         }
 
-        // Agregar producto
+        // Agregar/Editar producto
         document.getElementById('formAgregarProducto').addEventListener('submit', async function(e) {
             e.preventDefault();
             
@@ -612,7 +612,7 @@
                 return;
             }
 
-            const boton = e.target.querySelector('button[type="submit"]');
+            const boton = document.getElementById('btnSubmit');
             const textoOriginal = boton.textContent;
             boton.textContent = productoEditando ? '⏳ Actualizando...' : '⏳ Subiendo...';
             boton.disabled = true;
@@ -625,7 +625,7 @@
                     imagenUrl = await subirImagen(imagenFile);
                 }
 
-                // Crear/Actualizar producto con 3 precios
+                // Crear/Actualizar producto con 3 precios (ALINEADO CON LOS OTROS ARCHIVOS)
                 const producto = {
                     nombre: document.getElementById('nombre').value,
                     descripcion: document.getElementById('descripcion').value,
@@ -633,15 +633,11 @@
                     precio_clave2: parseFloat(document.getElementById('precio_clave2').value),
                     precio_clave3: parseFloat(document.getElementById('precio_clave3').value),
                     categoria: document.getElementById('categoria').value,
+                    imagen_url: imagenUrl,
                     tienda_id: tiendaId,
                     activo: true,
-                    fecha_creacion: new Date().toISOString()
+                    fecha_creacion: productoEditando ? productoEditando.fecha_creacion : new Date().toISOString()
                 };
-
-                // Agregar imagen solo si es nueva
-                if (imagenUrl) {
-                    producto.imagen_url = imagenUrl;
-                }
 
                 let error;
                 if (productoEditando) {
@@ -669,16 +665,12 @@
                     'agregar'
                 );
                 
-                this.reset();
-                document.getElementById('imagePreview').style.display = 'none';
-                imagenFile = null;
-                productoEditando = null;
-
-                // Actualizar lista de productos
+                resetFormulario();
                 cargarProductos();
                 actualizarDashboard();
 
             } catch (error) {
+                console.error('Error:', error);
                 mostrarAlerta('❌ Error al ' + (productoEditando ? 'actualizar' : 'agregar') + ' producto: ' + error.message, 'error', 'agregar');
             } finally {
                 boton.textContent = textoOriginal;
@@ -736,15 +728,15 @@
                         
                         <div class="price-display">
                             <div class="price-label">🔑 Clave 1234</div>
-                            <div class="price-value">$${producto.precio_clave1}</div>
+                            <div class="price-value">$${producto.precio_clave1 || producto.precio_normal}</div>
                         </div>
                         <div class="price-display">
                             <div class="price-label">🔑 Clave 1234q</div>
-                            <div class="price-value">$${producto.precio_clave2}</div>
+                            <div class="price-value">$${producto.precio_clave2 || producto.precio_normal}</div>
                         </div>
                         <div class="price-display">
                             <div class="price-label">🔑 Clave 1234a</div>
-                            <div class="price-value">$${producto.precio_clave3}</div>
+                            <div class="price-value">$${producto.precio_clave3 || producto.precio_normal}</div>
                         </div>
                         
                         <p style="margin-bottom: 5px; font-size: 0.9em;"><strong>Categoría:</strong> ${producto.categoria}</p>
@@ -775,17 +767,19 @@
             document.getElementById('nombre').value = producto.nombre;
             document.getElementById('descripcion').value = producto.descripcion;
             document.getElementById('categoria').value = producto.categoria;
-            document.getElementById('precio_clave1').value = producto.precio_clave1;
-            document.getElementById('precio_clave2').value = producto.precio_clave2;
-            document.getElementById('precio_clave3').value = producto.precio_clave3;
+            document.getElementById('precio_clave1').value = producto.precio_clave1 || producto.precio_normal;
+            document.getElementById('precio_clave2').value = producto.precio_clave2 || producto.precio_normal;
+            document.getElementById('precio_clave3').value = producto.precio_clave3 || producto.precio_normal;
 
             // Mostrar imagen actual
             const preview = document.getElementById('imagePreview');
             preview.src = producto.imagen_url;
             preview.style.display = 'block';
 
-            // Cambiar texto del botón
-            document.querySelector('#formAgregarProducto button[type="submit"]').textContent = '✅ Actualizar Producto';
+            // Cambiar interfaz para edición
+            document.getElementById('tituloAgregar').textContent = '✏️ Editar Producto';
+            document.getElementById('btnSubmit').textContent = '✅ Actualizar Producto';
+            document.getElementById('btnCancelar').style.display = 'inline-block';
 
             // Cambiar a sección de agregar/editar
             mostrarSeccion('agregar');
