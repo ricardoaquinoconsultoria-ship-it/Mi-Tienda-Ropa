@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tienda de Ropa - Acceso Exclusivo</title>
+    <title>Tienda de Ropa</title>
     <style>
         * {
             margin: 0;
@@ -375,9 +375,9 @@
         // CONTRASEÑAS VÁLIDAS
         const PASSWORDS_VALIDOS = {
             'admin123': { tipo: 'admin', nombre: 'Administrador', clave: 'admin' },
-            '1234': { tipo: 'cliente', nombre: 'Cliente Grupo 1', clave: 'clave1' },
-            '1234q': { tipo: 'cliente', nombre: 'Cliente Grupo 2', clave: 'clave2' },
-            '1234a': { tipo: 'cliente', nombre: 'Cliente Grupo 3', clave: 'clave3' }
+            '1234': { tipo: 'cliente', nombre: 'Cliente', clave: 'clave1' },
+            '1234q': { tipo: 'cliente', nombre: 'Cliente', clave: 'clave2' },
+            '1234a': { tipo: 'cliente', nombre: 'Cliente', clave: 'clave3' }
         };
 
         // Obtener tiendaId de URL o localStorage
@@ -414,9 +414,9 @@
             document.getElementById('loginContainer').style.display = 'none';
             document.getElementById('tiendaContent').style.display = 'block';
             
-            // Actualizar mensaje de bienvenida
-            document.getElementById('welcomeTitle').textContent = `Bienvenido, ${usuarioActual.nombre}`;
-            document.getElementById('welcomeSubtitle').textContent = 'Descubre nuestros productos exclusivos';
+            // Quitar mensajes de bienvenida personalizados
+            document.getElementById('welcomeTitle').textContent = 'Nuestra Colección';
+            document.getElementById('welcomeSubtitle').textContent = 'Productos exclusivos para nuestros clientes';
             
             cargarProductos();
         }
