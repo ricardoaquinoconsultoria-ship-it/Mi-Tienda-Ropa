@@ -399,7 +399,7 @@
                 <div class="stats-grid">
                     <div class="stat-card">
                         <div class="stat-number" id="totalProductos">0</div>
-                        <div class="stat-label">Productos Activos</div>
+                        <div class="stat-label">Productos Totales</div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-number" id="totalCategorias">0</div>
@@ -620,13 +620,10 @@
                     imagenUrl = await subirImagen(imagenFile);
                 }
 
-                // Crear objeto producto
+                // Crear objeto producto - COMPATIBLE CON AMBAS ESTRUCTURAS
                 const producto = {
                     nombre: document.getElementById('nombre').value,
                     descripcion: document.getElementById('descripcion').value,
-                    precio_clave1: parseFloat(document.getElementById('precio_clave1').value),
-                    precio_clave2: parseFloat(document.getElementById('precio_clave2').value),
-                    precio_clave3: parseFloat(document.getElementById('precio_clave3').value),
                     categoria: document.getElementById('categoria').value,
                     imagen_url: imagenUrl,
                     tienda_id: tiendaId,
@@ -634,14 +631,35 @@
                     fecha_creacion: productoEditando ? productoEditando.fecha_creacion : new Date().toISOString()
                 };
 
+                // AGREGAR PRECIOS - manejar ambos casos
+                const precio1 = parseFloat(document.getElementById('precio_clave1').value);
+                const precio2 = parseFloat(document.getElementById('precio_clave2').value);
+                const precio3 = parseFloat(document.getElementById('precio_clave3').value);
+
+                // Usar la estructura que corresponda
+                if (productoEditando && productoEditando.precio_normal) {
+                    // Si el producto existente usa precio_normal
+                    producto.precio_normal = precio1;
+                    producto.precio_clave1 = precio1;
+                    producto.precio_clave2 = precio2;
+                    producto.precio_clave3 = precio3;
+                } else {
+                    // Usar la nueva estructura con precios_clave
+                    producto.precio_clave1 = precio1;
+                    producto.precio_clave2 = precio2;
+                    producto.precio_clave3 = precio3;
+                }
+
                 let error;
                 if (productoEditando) {
+                    console.log('Actualizando producto:', producto);
                     const { error: updateError } = await supabase
                         .from('productos')
                         .update(producto)
                         .eq('id', productoEditando.id);
                     error = updateError;
                 } else {
+                    console.log('Creando nuevo producto:', producto);
                     const { error: insertError } = await supabase
                         .from('productos')
                         .insert([producto]);
@@ -670,24 +688,27 @@
             }
         });
 
-        // Cargar productos
+        // Cargar productos - CORREGIDO: Cargar TODOS los productos, no solo activos
         async function cargarProductos() {
             try {
                 tiendaId = obtenerTiendaId();
+                console.log('Cargando productos para tienda:', tiendaId);
+                
+                // CARGAR TODOS LOS PRODUCTOS, NO FILTRAR POR ACTIVO
                 const { data, error } = await supabase
                     .from('productos')
                     .select('*')
                     .eq('tienda_id', tiendaId)
-                    .eq('activo', true)
                     .order('fecha_creacion', { ascending: false });
                 
                 if (error) throw error;
 
+                console.log('Productos cargados:', data);
                 productos = data || [];
                 mostrarListaProductos();
             } catch (error) {
                 console.error('Error cargando productos:', error);
-                mostrarAlerta('Error cargando productos', 'error', 'productos');
+                mostrarAlerta('Error cargando productos: ' + error.message, 'error', 'productos');
             }
         }
 
@@ -713,6 +734,11 @@
                 const fecha = new Date(producto.fecha_creacion);
                 const fechaFormateada = fecha.toLocaleDateString('es-ES');
                 
+                // Obtener precios - compatible con ambas estructuras
+                const precio1 = producto.precio_clave1 || producto.precio_normal;
+                const precio2 = producto.precio_clave2 || producto.precio_normal;
+                const precio3 = producto.precio_clave3 || producto.precio_normal;
+                
                 return `
                     <div class="product-card">
                         <img src="${producto.imagen_url}" alt="${producto.nombre}" class="product-image"
@@ -721,27 +747,30 @@
                         
                         <div class="price-display">
                             <div class="price-label">🔑 Clave 1234</div>
-                            <div class="price-value">$${producto.precio_clave1 || producto.precio_normal}</div>
+                            <div class="price-value">$${precio1}</div>
                         </div>
                         <div class="price-display">
                             <div class="price-label">🔑 Clave 1234q</div>
-                            <div class="price-value">$${producto.precio_clave2 || producto.precio_normal}</div>
+                            <div class="price-value">$${precio2}</div>
                         </div>
                         <div class="price-display">
                             <div class="price-label">🔑 Clave 1234a</div>
-                            <div class="price-value">$${producto.precio_clave3 || producto.precio_normal}</div>
+                            <div class="price-value">$${precio3}</div>
                         </div>
                         
                         <p style="margin-bottom: 8px; font-size: 0.9em;"><strong>Categoría:</strong> ${producto.categoria}</p>
                         <p style="margin-bottom: 12px; color: #666; font-size: 0.9em;">${producto.descripcion}</p>
                         <p style="color: #95a5a6; font-size: 0.8em;">Agregado: ${fechaFormateada}</p>
+                        <p style="color: ${producto.activo ? '#27ae60' : '#e74c3c'}; font-size: 0.8em; font-weight: bold;">
+                            ${producto.activo ? '✅ Activo' : '❌ Inactivo'}
+                        </p>
                         
                         <div class="product-actions">
                             <button class="btn btn-warning" onclick="editarProducto('${producto.id}')">
                                 ✏️ Editar
                             </button>
                             <button class="btn btn-danger" onclick="eliminarProducto('${producto.id}', '${producto.nombre}')">
-                                🗑️ Eliminar
+                                🗑️ ${producto.activo ? 'Desactivar' : 'Eliminar'}
                             </button>
                         </div>
                     </div>
@@ -749,20 +778,28 @@
             }).join('');
         }
 
-        // Editar producto
+        // Editar producto - MEJORADO
         function editarProducto(id) {
+            console.log('Buscando producto con ID:', id);
+            console.log('Productos disponibles:', productos);
+            
             const producto = productos.find(p => p.id === id);
+            
             if (!producto) {
-                mostrarAlerta('Producto no encontrado', 'error', 'productos');
+                console.error('Producto no encontrado. ID:', id);
+                mostrarAlerta('Error: Producto no encontrado. Recarga la página.', 'error', 'productos');
                 return;
             }
 
+            console.log('Producto encontrado:', producto);
             productoEditando = producto;
 
             // Llenar formulario
             document.getElementById('nombre').value = producto.nombre;
             document.getElementById('descripcion').value = producto.descripcion;
             document.getElementById('categoria').value = producto.categoria;
+            
+            // Cargar precios - manejar ambos casos
             document.getElementById('precio_clave1').value = producto.precio_clave1 || producto.precio_normal;
             document.getElementById('precio_clave2').value = producto.precio_clave2 || producto.precio_normal;
             document.getElementById('precio_clave3').value = producto.precio_clave3 || producto.precio_normal;
@@ -775,7 +812,7 @@
             }
 
             // Cambiar interfaz para edición
-            document.getElementById('tituloAgregar').textContent = '✏️ Editar Producto';
+            document.getElementById('tituloAgregar').textContent = '✏️ Editar Producto: ' + producto.nombre;
             document.getElementById('btnSubmit').textContent = '✅ Actualizar Producto';
             document.getElementById('btnCancelar').style.display = 'inline-block';
 
@@ -783,22 +820,35 @@
             mostrarSeccion('agregar');
         }
 
-        // Eliminar producto
+        // Eliminar/Desactivar producto
         async function eliminarProducto(id, nombre) {
-            if (confirm(`¿Estás seguro de eliminar el producto "${nombre}"?`)) {
+            const producto = productos.find(p => p.id === id);
+            const accion = producto.activo ? 'desactivar' : 'eliminar permanentemente';
+            
+            if (confirm(`¿Estás seguro de ${accion} el producto "${nombre}"?`)) {
                 try {
-                    const { error } = await supabase
-                        .from('productos')
-                        .update({ activo: false })
-                        .eq('id', id);
-
-                    if (error) throw error;
+                    if (producto.activo) {
+                        // Desactivar producto
+                        const { error } = await supabase
+                            .from('productos')
+                            .update({ activo: false })
+                            .eq('id', id);
+                        if (error) throw error;
+                        mostrarAlerta('✅ Producto desactivado correctamente', 'success', 'productos');
+                    } else {
+                        // Eliminar permanentemente
+                        const { error } = await supabase
+                            .from('productos')
+                            .delete()
+                            .eq('id', id);
+                        if (error) throw error;
+                        mostrarAlerta('✅ Producto eliminado permanentemente', 'success', 'productos');
+                    }
                     
-                    mostrarAlerta('✅ Producto eliminado correctamente', 'success', 'productos');
                     await cargarProductos();
                     actualizarDashboard();
                 } catch (error) {
-                    mostrarAlerta('❌ Error eliminando producto', 'error', 'productos');
+                    mostrarAlerta('❌ Error: ' + error.message, 'error', 'productos');
                 }
             }
         }
@@ -813,7 +863,7 @@
 
             const categorias = [...new Set(productosActivos?.map(p => p.categoria) || [])];
             
-            document.getElementById('totalProductos').textContent = productosActivos?.length || 0;
+            document.getElementById('totalProductos').textContent = productos.length;
             document.getElementById('totalCategorias').textContent = categorias.length;
         }
 
