@@ -695,7 +695,7 @@
             }
         }
 
-        // Mostrar lista de productos
+        // Mostrar lista de productos - CORREGIDO
         function mostrarListaProductos() {
             const container = document.getElementById('listaProductos');
             
@@ -756,15 +756,17 @@
             }).join('');
         }
 
-        // Editar producto
+        // Editar producto - CORREGIDO
         function editarProducto(id) {
             console.log('Buscando producto con ID:', id);
             console.log('Productos disponibles:', productos);
             
-            const producto = productos.find(p => p.id === id);
+            // CORRECCIÓN: Buscar el producto correctamente
+            const producto = productos.find(p => p.id == id); // Usar == en lugar de === para compatibilidad
             
             if (!producto) {
                 console.error('Producto no encontrado. ID:', id);
+                console.error('IDs disponibles:', productos.map(p => p.id));
                 mostrarAlerta('Error: Producto no encontrado. Recarga la página.', 'error', 'productos');
                 return;
             }
@@ -800,7 +802,8 @@
 
         // Eliminar/Desactivar producto
         async function eliminarProducto(id, nombre) {
-            const producto = productos.find(p => p.id === id);
+            // CORRECCIÓN: Buscar el producto correctamente
+            const producto = productos.find(p => p.id == id);
             const accion = producto.activo ? 'desactivar' : 'eliminar permanentemente';
             
             if (confirm(`¿Estás seguro de ${accion} el producto "${nombre}"?`)) {
