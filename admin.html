@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Administrativo - Tienda de Ropa</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 15px;
+        }
+
+        .admin-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .admin-header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 1.5rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .admin-header h1 {
+            margin-bottom: 0.5rem;
+            font-size: 1.8em;
+        }
+
+        .header-actions {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 0.8em;
+            text-decoration: none;
+            display: inline-block;
+            transition: transform 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-config {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            color: white;
+        }
+
+        .admin-nav {
+            background: #34495e;
+            padding: 0.8rem;
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .nav-btn {
+            background: transparent;
+            color: white;
+            border: 2px solid #667eea;
+            padding: 6px 12px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.8em;
+        }
+
+        .nav-btn.active {
+            background: #667eea;
+        }
+
+        .admin-content {
+            padding: 1.5rem;
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #2c3e50;
+            font-size: 0.9em;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 0.9em;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-control:focus {
+            border-color: #667eea;
+            outline: none;
+        }
+
+        textarea.form-control {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .product-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+
+        .product-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+
+        .product-image {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+
+        .product-actions {
+            margin-top: 12px;
+            display: flex;
+            gap: 6px;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8em;
+        }
+
+        .alert {
+            padding: 10px 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            display: none;
+            font-size: 0.9em;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .image-preview {
+            max-width: 150px;
+            max-height: 150px;
+            border-radius: 6px;
+            border: 2px dashed #ddd;
+            margin-top: 8px;
+            display: none;
+        }
+
+        .upload-area {
+            border: 2px dashed #667eea;
+            border-radius: 8px;
+            padding: 30px 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            background: #f8f9fa;
+            font-size: 0.9em;
+        }
+
+        .upload-area:hover {
+            background: #e9ecef;
+        }
+
+        .upload-area.dragover {
+            background: #667eea;
+            border-color: #5a6fd8;
+            color: white;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border-left: 4px solid #667eea;
+        }
+
+        .stat-number {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #7f8c8d;
+            font-size: 0.8em;
+        }
+
+        .price-display {
+            background: white;
+            padding: 8px;
+            border-radius: 6px;
+            margin: 5px 0;
+            border-left: 3px solid #667eea;
+        }
+
+        .price-label {
+            font-size: 0.7em;
+            color: #7f8c8d;
+            margin-bottom: 2px;
+        }
+
+        .price-value {
+            font-weight: bold;
+            color: #e74c3c;
+            font-size: 0.9em;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 30px;
+            color: #666;
+        }
+
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 15px;
+            color: #666;
+        }
+
+        .tienda-info {
+            background: #e8f4fd;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            .admin-content {
+                padding: 1rem;
+            }
+            
+            .products-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .header-actions {
+                position: relative;
+                top: 0;
+                right: 0;
+                justify-content: center;
+                margin-top: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <div class="admin-header">
+            <h1>⚙️ Panel Administrativo</h1>
+            <p>Gestiona tu tienda de ropa</p>
+            
+            <div class="header-actions">
+                <a href="config.html" class="btn btn-config">🔧 Configuración</a>
+                <a href="index.html" class="btn btn-primary">🏪 Ver Tienda</a>
+            </div>
+        </div>
+        
+        <div class="admin-nav">
+            <button class="nav-btn active" onclick="mostrarSeccion('dashboard')">📊 Dashboard</button>
+            <button class="nav-btn" onclick="mostrarSeccion('productos')">📦 Productos</button>
+            <button class="nav-btn" onclick="mostrarSeccion('agregar')">➕ Agregar Producto</button>
+        </div>
+        
+        <div class="admin-content">
+            <!-- Dashboard -->
+            <div id="dashboard" class="section active">
+                <h2>📊 Resumen de la Tienda</h2>
+                
+                <div class="tienda-info">
+                    <h4>🏪 Información de la Tienda</h4>
+                    <p><strong>ID de Tienda:</strong> <span id="tiendaIdDisplay">Cargando...</span></p>
+                    <p><strong>Estado:</strong> <span style="color: #27ae60;">● Conectado</span></p>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalProductos">0</div>
+                        <div class="stat-label">Productos Activos</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalCategorias">0</div>
+                        <div class="stat-label">Categorías</div>
+                    </div>
+                </div>
+
+                <div class="tienda-info">
+                    <h4>🔑 Sistema de Precios</h4>
+                    <p><strong>Contraseña 1234:</strong> Clientes ven <strong>Precio Clave 1</strong></p>
+                    <p><strong>Contraseña 1234q:</strong> Clientes ven <strong>Precio Clave 2</strong></p>
+                    <p><strong>Contraseña 1234a:</strong> Clientes ven <strong>Precio Clave 3</strong></p>
+                    <p><strong>Contraseña admin123:</strong> Acceso administrativo completo</p>
+                </div>
+            </div>
+            
+            <!-- Sección Productos -->
+            <div id="productos" class="section">
+                <h2>📦 Gestión de Productos</h2>
+                <div id="alertProductos" class="alert"></div>
+                <div id="listaProductos" class="products-grid">
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                        <p>Cargando productos...</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Sección Agregar Producto -->
+            <div id="agregar" class="section">
+                <h2>➕ Agregar Nuevo Producto</h2>
+                <div id="alertAgregar" class="alert"></div>
+                
+                <form id="formAgregarProducto">
+                    <div class="form-group">
+                        <label for="nombre">Nombre del Producto *</label>
+                        <input type="text" id="nombre" class="form-control" placeholder="Ej: Vestido Elegante Negro" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="descripcion">Descripción *</label>
+                        <textarea id="descripcion" class="form-control" rows="3" placeholder="Describe las características del producto..." required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="categoria">Categoría *</label>
+                        <select id="categoria" class="form-control" required>
+                            <option value="">Seleccionar categoría</option>
+                            <option value="vestidos">Vestidos</option>
+                            <option value="blusas">Blusas</option>
+                            <option value="pantalones">Pantalones</option>
+                            <option value="faldas">Faldas</option>
+                            <option value="accesorios">Accesorios</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>💰 Sistema de Precios</label>
+                        <div class="form-row">
+                            <div>
+                                <label for="precio_clave1">Precio Clave 1234 *</label>
+                                <input type="number" id="precio_clave1" class="form-control" min="1" step="0.01" placeholder="99.99" required>
+                                <div style="font-size: 0.7em; color: #666; margin-top: 4px;">Para clientes con clave "1234"</div>
+                            </div>
+                            <div>
+                                <label for="precio_clave2">Precio Clave 1234q *</label>
+                                <input type="number" id="precio_clave2" class="form-control" min="1" step="0.01" placeholder="89.99" required>
+                                <div style="font-size: 0.7em; color: #666; margin-top: 4px;">Para clientes con clave "1234q"</div>
+                            </div>
+                            <div>
+                                <label for="precio_clave3">Precio Clave 1234a *</label>
+                                <input type="number" id="precio_clave3" class="form-control" min="1" step="0.01" placeholder="79.99" required>
+                                <div style="font-size: 0.7em; color: #666; margin-top: 4px;">Para clientes con clave "1234a"</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="imagenInput">Imagen del Producto *</label>
+                        <div class="upload-area" id="uploadArea" onclick="document.getElementById('imagenInput').click()">
+                            <p>🖼️ Haz clic para subir imagen</p>
+                            <p style="font-size: 0.7em; color: #666;">Formatos: JPG, PNG, WEBP (Máx. 5MB)</p>
+                        </div>
+                        <input type="file" id="imagenInput" accept="image/*" style="display: none;" onchange="previsualizarImagen(this)">
+                        <img id="imagePreview" class="image-preview" alt="Vista previa">
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary" style="padding: 12px 25px; font-size: 1em;">
+                        ✅ Agregar Producto
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // CONFIGURACIÓN SUPABASE - TUS DATOS REALES
+        const SUPABASE_URL = 'https://plhifofzgwsgoqmlzshd.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsaGlmb2Z6Z3dzZ29xbWx6c2hkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM2NTQ0NTEsImV4cCI6MjA3OTIzMDQ1MX0.DJoedRtvHqDMmLHSwnB8Vyo4-dLnW22hn0HF5EVH0hU';
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let imagenFile = null;
+        let tiendaId = null;
+        let productos = [];
+
+        // Obtener tiendaId
+        function obtenerTiendaId() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('tienda') || localStorage.getItem('tiendaId') || 'tienda_demo';
+        }
+
+        // Mostrar sección
+        function mostrarSeccion(seccion) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            
+            document.getElementById(seccion).classList.add('active');
+            event.target.classList.add('active');
+            
+            if (seccion === 'productos') {
+                cargarProductos();
+            } else if (seccion === 'dashboard') {
+                actualizarDashboard();
+            }
+        }
+
+        // Mostrar ID de tienda
+        function mostrarTiendaId() {
+            document.getElementById('tiendaIdDisplay').textContent = tiendaId;
+        }
+
+        // Previsualizar imagen
+        function previsualizarImagen(input) {
+            const file = input.files[0];
+            if (file) {
+                if (file.size > 5 * 1024 * 1024) {
+                    mostrarAlerta('La imagen es demasiado grande. Máximo 5MB.', 'error', 'agregar');
+                    return;
+                }
+
+                imagenFile = file;
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById('imagePreview');
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Subir imagen a Supabase Storage
+        async function subirImagen(file) {
+            try {
+                const fileName = `tienda_${tiendaId}/${Date.now()}_${file.name}`;
+                const { data, error } = await supabase.storage
+                    .from('productos')
+                    .upload(fileName, file);
+
+                if (error) throw error;
+
+                // Obtener URL pública
+                const { data: urlData } = supabase.storage
+                    .from('productos')
+                    .getPublicUrl(fileName);
+
+                return urlData.publicUrl;
+            } catch (error) {
+                console.error('Error subiendo imagen:', error);
+                throw error;
+            }
+        }
+
+        // Agregar producto
+        document.getElementById('formAgregarProducto').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            if (!imagenFile) {
+                mostrarAlerta('Por favor selecciona una imagen del producto', 'error', 'agregar');
+                return;
+            }
+
+            const boton = e.target.querySelector('button[type="submit"]');
+            const textoOriginal = boton.textContent;
+            boton.textContent = '⏳ Subiendo...';
+            boton.disabled = true;
+
+            try {
+                // Subir imagen
+                const imagenUrl = await subirImagen(imagenFile);
+
+                // Crear producto con 3 precios
+                const producto = {
+                    nombre: document.getElementById('nombre').value,
+                    descripcion: document.getElementById('descripcion').value,
+                    precio_clave1: parseFloat(document.getElementById('precio_clave1').value),
+                    precio_clave2: parseFloat(document.getElementById('precio_clave2').value),
+                    precio_clave3: parseFloat(document.getElementById('precio_clave3').value),
+                    categoria: document.getElementById('categoria').value,
+                    imagen_url: imagenUrl,
+                    tienda_id: tiendaId,
+                    activo: true,
+                    fecha_creacion: new Date().toISOString()
+                };
+
+                // Guardar en Supabase
+                const { error } = await supabase
+                    .from('productos')
+                    .insert([producto]);
+
+                if (error) throw error;
+
+                mostrarAlerta('✅ Producto agregado correctamente. Ya está visible en la tienda.', 'success', 'agregar');
+                this.reset();
+                document.getElementById('imagePreview').style.display = 'none';
+                imagenFile = null;
+
+                actualizarDashboard();
+
+            } catch (error) {
+                mostrarAlerta('❌ Error al agregar producto: ' + error.message, 'error', 'agregar');
+            } finally {
+                boton.textContent = textoOriginal;
+                boton.disabled = false;
+            }
+        });
+
+        // Cargar productos
+        async function cargarProductos() {
+            try {
+                tiendaId = obtenerTiendaId();
+                const { data, error } = await supabase
+                    .from('productos')
+                    .select('*')
+                    .eq('tienda_id', tiendaId)
+                    .order('fecha_creacion', { ascending: false });
+                
+                if (error) throw error;
+
+                productos = data || [];
+                mostrarListaProductos();
+            } catch (error) {
+                console.error('Error cargando productos:', error);
+                mostrarAlerta('Error cargando productos', 'error', 'productos');
+            }
+        }
+
+        // Mostrar lista de productos
+        function mostrarListaProductos() {
+            const container = document.getElementById('listaProductos');
+            
+            if (productos.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📦</div>
+                        <h3>No hay productos</h3>
+                        <p>Agrega tu primer producto para comenzar</p>
+                        <button class="btn btn-primary" onclick="mostrarSeccion('agregar')" style="margin-top: 15px;">
+                            ➕ Agregar Primer Producto
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = productos.map(producto => {
+                const fecha = new Date(producto.fecha_creacion);
+                const fechaFormateada = fecha.toLocaleDateString('es-ES');
+                
+                return `
+                    <div class="product-card">
+                        <img src="${producto.imagen_url}" alt="${producto.nombre}" class="product-image"
+                             onerror="this.src='https://via.placeholder.com/300x200/667eea/ffffff?text=Imagen+No+Disponible'">
+                        <h3 style="margin-bottom: 8px; color: #2c3e50; font-size: 1em;">${producto.nombre}</h3>
+                        
+                        <div class="price-display">
+                            <div class="price-label">🔑 Clave 1234</div>
+                            <div class="price-value">$${producto.precio_clave1}</div>
+                        </div>
+                        <div class="price-display">
+                            <div class="price-label">🔑 Clave 1234q</div>
+                            <div class="price-value">$${producto.precio_clave2}</div>
+                        </div>
+                        <div class="price-display">
+                            <div class="price-label">🔑 Clave 1234a</div>
+                            <div class="price-value">$${producto.precio_clave3}</div>
+                        </div>
+                        
+                        <p style="margin-bottom: 5px; font-size: 0.9em;"><strong>Categoría:</strong> ${producto.categoria}</p>
+                        <p style="margin-bottom: 10px; color: #666; font-size: 0.8em;">${producto.descripcion}</p>
+                        <p style="color: #95a5a6; font-size: 0.7em;">Agregado: ${fechaFormateada}</p>
+                        <div class="product-actions">
+                            <button class="btn-danger" onclick="eliminarProducto('${producto.id}', '${producto.nombre}')">
+                                🗑️ Eliminar
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Eliminar producto
+        async function eliminarProducto(id, nombre) {
+            if (confirm(`¿Estás seguro de eliminar el producto "${nombre}"?`)) {
+                try {
+                    const { error } = await supabase
+                        .from('productos')
+                        .update({ activo: false })
+                        .eq('id', id);
+
+                    if (error) throw error;
+                    
+                    mostrarAlerta('✅ Producto eliminado correctamente', 'success', 'productos');
+                    cargarProductos();
+                    actualizarDashboard();
+                } catch (error) {
+                    mostrarAlerta('❌ Error eliminando producto', 'error', 'productos');
+                }
+            }
+        }
+
+        // Actualizar dashboard
+        async function actualizarDashboard() {
+            const { data: productosActivos } = await supabase
+                .from('productos')
+                .select('categoria')
+                .eq('tienda_id', tiendaId)
+                .eq('activo', true);
+
+            const categorias = [...new Set(productosActivos?.map(p => p.categoria) || [])];
+            
+            document.getElementById('totalProductos').textContent = productosActivos?.length || 0;
+            document.getElementById('totalCategorias').textContent = categorias.length;
+        }
+
+        // Mostrar alerta
+        function mostrarAlerta(mensaje, tipo, seccion) {
+            const alert = document.getElementById(`alert${seccion.charAt(0).toUpperCase() + seccion.slice(1)}`);
+            alert.textContent = mensaje;
+            alert.className = `alert alert-${tipo}`;
+            alert.style.display = 'block';
+            
+            setTimeout(() => {
+                alert.style.display = 'none';
+            }, 5000);
+        }
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', async function() {
+            tiendaId = obtenerTiendaId();
+            mostrarTiendaId();
+            await cargarProductos();
+            actualizarDashboard();
+        });
+    </script>
+</body>
+</html>
