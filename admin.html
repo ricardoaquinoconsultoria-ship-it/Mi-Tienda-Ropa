@@ -578,23 +578,43 @@
             }
         }
 
-        // Subir imagen a Supabase Storage
+        // Subir imagen a Supabase Storage - CON DEBUG
         async function subirImagen(file) {
             try {
+                console.log('🔍 [1] INICIANDO SUBIDA...');
+                console.log('🔍 [2] Archivo:', file.name, 'Tamaño:', file.size, 'Tipo:', file.type);
+                
                 const fileName = `tienda_${tiendaId}/${Date.now()}_${file.name}`;
+                console.log('🔍 [3] Ruta destino:', fileName);
+                
+                console.log('🔍 [4] Intentando subir a Supabase...');
                 const { data, error } = await supabase.storage
                     .from('productos')
                     .upload(fileName, file);
 
-                if (error) throw error;
-
+                console.log('🔍 [5] Respuesta de Supabase:', { data, error });
+                    
+                if (error) {
+                    console.error('❌ [6] ERROR en upload:', error);
+                    console.error('❌ Mensaje:', error.message);
+                    console.error('❌ Detalles:', error.details);
+                    console.error('❌ Hint:', error.hint);
+                    throw error;
+                }
+                
+                console.log('✅ [7] SUBIDA EXITOSA:', data);
+                
+                // Obtener URL pública
+                console.log('🔍 [8] Generando URL pública...');
                 const { data: urlData } = supabase.storage
                     .from('productos')
-                    .getPublicUrl(fileName);
-
+                    .getPublicUrl(data.path);
+                    
+                console.log('✅ [9] URL generada:', urlData.publicUrl);
                 return urlData.publicUrl;
+                
             } catch (error) {
-                console.error('Error subiendo imagen:', error);
+                console.error('💥 [10] ERROR COMPLETO:', error);
                 throw error;
             }
         }
@@ -695,7 +715,7 @@
             }
         }
 
-        // Mostrar lista de productos - CORREGIDO
+        // Mostrar lista de productos
         function mostrarListaProductos() {
             const container = document.getElementById('listaProductos');
             
@@ -756,13 +776,12 @@
             }).join('');
         }
 
-        // Editar producto - CORREGIDO
+        // Editar producto
         function editarProducto(id) {
             console.log('Buscando producto con ID:', id);
             console.log('Productos disponibles:', productos);
             
-            // CORRECCIÓN: Buscar el producto correctamente
-            const producto = productos.find(p => p.id == id); // Usar == en lugar de === para compatibilidad
+            const producto = productos.find(p => p.id == id);
             
             if (!producto) {
                 console.error('Producto no encontrado. ID:', id);
@@ -802,7 +821,6 @@
 
         // Eliminar/Desactivar producto
         async function eliminarProducto(id, nombre) {
-            // CORRECCIÓN: Buscar el producto correctamente
             const producto = productos.find(p => p.id == id);
             const accion = producto.activo ? 'desactivar' : 'eliminar permanentemente';
             
